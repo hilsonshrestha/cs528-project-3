@@ -15,7 +15,7 @@ object ActivityTransitionUtil {
     fun hasActivityTransitionPermission(context: Context) : Boolean =
         EasyPermissions.hasPermissions(
             context,
-            android.Manifest.permission.ACTIVITY_RECOGNITION
+            ACTIVITY_RECOGNITION
         )
 
     private fun getTransitions(): MutableList<ActivityTransition>{
@@ -55,6 +55,18 @@ object ActivityTransitionUtil {
         transitions +=
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.RUNNING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
                 .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
                 .build()
 

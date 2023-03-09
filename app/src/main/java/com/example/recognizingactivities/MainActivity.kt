@@ -1,26 +1,39 @@
 package com.example.recognizingactivities
 
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
 import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
+import com.example.recognizingactivities.util.MyActivityResultContract
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-import timber.log.Timber
+
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
+
+    // this contract is used to process data passed back from ActivityTransitionReceiver
+    private val myActivityResultContract = MyActivityResultContract()
+    val launcher = registerForActivityResult(myActivityResultContract) { result ->
+        // Do something with the resulting data
+        if (result != null) {
+            return@registerForActivityResult
+            }
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,9 +73,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             .addOnSuccessListener {
                 Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
+                Toast.makeText(this, "Success - Request Updates", Toast.LENGTH_LONG).show()
+
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
+                Toast.makeText(this, "Failure - Request Updates", Toast.LENGTH_LONG).show()
             }
     }
 
@@ -75,6 +91,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private fun getPendingIntent() : PendingIntent{
         val intent = Intent(this, ActivityTransitionReceiver::class.java)
+        intent.action = "action.TRANSITIONS_DATA"
         Log.d("TAG", "PendingIntent is being called...")
         Log.d("TAG", "intent content...${intent.toString()}")
         return PendingIntent.getBroadcast(
@@ -119,4 +136,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             android.Manifest.permission.ACTIVITY_RECOGNITION
         )
     }
+
+    // to handle result sent back from ActivityTransitionReceiver
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//    }
 }
