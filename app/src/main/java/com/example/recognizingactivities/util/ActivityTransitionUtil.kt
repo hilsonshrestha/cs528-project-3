@@ -70,7 +70,6 @@ object ActivityTransitionUtil {
                 .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
                 .build()
 
-
         return transitions
     }
 
