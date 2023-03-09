@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import com.example.recognizingactivities.util.ActivityState
 import com.example.recognizingactivities.util.ActivityTransitionUtil
+import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.ActivityTransitionResult
 
 class ActivityTransitionReceiver: BroadcastReceiver() {
@@ -23,6 +25,11 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
 
                     Log.d("TAG", info)
                     Toast.makeText(context, info, Toast.LENGTH_LONG).show()
+
+                    // Update UI
+                    if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
+                        ActivityState.updateState(event.activityType)
+                    }
                 }
             }
         }

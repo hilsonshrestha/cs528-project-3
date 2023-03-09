@@ -7,8 +7,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.Observer
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
+import com.example.recognizingactivities.util.ActivityState
 import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
@@ -29,7 +31,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         client = ActivityRecognition.getClient(this)
 
-
         binding.switchActivityTransition.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -49,6 +50,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
         }
 
+        // update UI on transition
+        ActivityState.getState().observe(this, Observer { activity ->
+            val (img, text) = when(activity) {
+                DetectedActivity.STILL -> R.drawable.still to R.string.still
+                DetectedActivity.WALKING -> R.drawable.walking to R.string.walking
+                DetectedActivity.RUNNING -> R.drawable.running to R.string.running
+                else -> R.drawable.in_vehicle to R.string.in_vehicle
+            }
+            binding.activityImage.setImageResource(img)
+            binding.activityText.setText(text)
+        })
     }
 
     private fun requestForUpdates(){
@@ -58,7 +70,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 getPendingIntent()
             )
             .addOnSuccessListener {
-                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
+//                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
             }
             .addOnFailureListener {
