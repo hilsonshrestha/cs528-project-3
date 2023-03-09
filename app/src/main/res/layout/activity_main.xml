@@ -40,14 +40,11 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"/>
 
-<!--    TODO: Hilson to replace with an actual embedded map-->
-    <ImageView
-        android:layout_height="150dp"
-        android:layout_width="150dp"
-        android:background="@drawable/sample_map_image"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center_horizontal"/>
-
+        <androidx.fragment.app.FragmentContainerView
+            android:name="com.example.recognizingactivities.MapsFragment"
+            android:layout_width="match_parent"
+            android:id="@+id/mapContainer"
+            android:layout_height="200dp"/>
 
     <ImageView
         android:id="@+id/activityImage"
