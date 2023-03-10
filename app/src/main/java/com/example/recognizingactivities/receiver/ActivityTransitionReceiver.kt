@@ -20,14 +20,21 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
             result?.let{
                 result.transitionEvents.forEach { event ->
                     Log.d("TAG", event.toString())
-                    val info =
-                        "Transition: ${ActivityTransitionUtil.toActivityString(event.activityType)} - ${ActivityTransitionUtil.toTransitionType(event.transitionType)}"
+                    val activityType = ActivityTransitionUtil.toActivityString(event.activityType)
+                    val transitionType = ActivityTransitionUtil.toTransitionType(event.transitionType)
+                    Log.d("TAG", "Transition: $activityType - $transitionType")
 
-                    Log.d("TAG", info)
-                    Toast.makeText(context, info, Toast.LENGTH_LONG).show()
-
-                    // Update UI
-                    if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
+                    // Display toast with old activity
+                    if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_EXIT){
+                        val duration = (System.currentTimeMillis() - ActivityState.getStartTime()) / 1000
+                        val durationMin = duration / 60
+                        val durationSec = duration % 60
+                        val info = "You were $activityType for ${durationMin}m, ${durationSec}s"
+                        Toast.makeText(context, info, Toast.LENGTH_LONG).show()
+                    }
+                    // Update UI with new activity
+                    else if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
+                        ActivityState.startActivityTimer()
                         ActivityState.updateState(event.activityType)
                     }
                 }

@@ -17,7 +17,6 @@ import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQU
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-import timber.log.Timber
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
@@ -72,6 +71,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             .addOnSuccessListener {
 //                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
+                ActivityState.startActivityTimer()
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
