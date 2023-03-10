@@ -1,12 +1,15 @@
 package com.example.recognizingactivities
 
+import android.Manifest
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
@@ -14,6 +17,7 @@ import com.example.recognizingactivities.util.ActivityState
 import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
+import com.example.recognizingactivities.util.Constants.LOCATION_REQUEST_CODE
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
@@ -24,6 +28,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -64,6 +69,20 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun requestForUpdates(){
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         client
             .requestActivityTransitionUpdates(
                 ActivityTransitionUtil.getActivityTransitionRequest(),
@@ -79,6 +98,20 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     private fun removeUpdates(){
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         client
             .removeActivityUpdates(getPendingIntent()) // the same pending intent
     }
@@ -89,12 +122,24 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         val intent = Intent(this, ActivityTransitionReceiver::class.java)
         Log.d("TAG", "PendingIntent is being called...")
         Log.d("TAG", "intent content...${intent.toString()}")
-        return PendingIntent.getBroadcast(
-            this,
-            Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT
-        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return PendingIntent.getBroadcast(
+                this,
+                Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            return PendingIntent.getBroadcast(
+                this,
+                Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
+
+
     }
 
 
@@ -128,7 +173,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             this,
             "You need to allow activity transition permissions in order to use this feature.",
             ACTIVITY_TRANSITION_REQUEST_CODE,
-            android.Manifest.permission.ACTIVITY_RECOGNITION
+            android.Manifest.permission.ACTIVITY_RECOGNITION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
 }
