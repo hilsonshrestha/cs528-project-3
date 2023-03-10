@@ -15,7 +15,7 @@ object ActivityTransitionUtil {
     fun hasActivityTransitionPermission(context: Context) : Boolean =
         EasyPermissions.hasPermissions(
             context,
-            android.Manifest.permission.ACTIVITY_RECOGNITION
+            ACTIVITY_RECOGNITION
         )
 
     private fun getTransitions(): MutableList<ActivityTransition>{

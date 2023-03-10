@@ -2,15 +2,17 @@ package com.example.recognizingactivities
 
 import android.Manifest
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
+import androidx.appcompat.app.AppCompatActivity
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
 import com.example.recognizingactivities.util.ActivityState
@@ -18,17 +20,27 @@ import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
 import com.example.recognizingactivities.util.Constants.LOCATION_REQUEST_CODE
+import com.example.recognizingactivities.util.MyActivityResultContract
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-import timber.log.Timber
+
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
 
+    // this contract is used to process data passed back from ActivityTransitionReceiver
+    private val myActivityResultContract = MyActivityResultContract()
     @RequiresApi(Build.VERSION_CODES.Q)
+    val launcher = registerForActivityResult(myActivityResultContract) { result ->
+        // Do something with the resulting data
+        if (result != null) {
+            return@registerForActivityResult
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -91,13 +103,16 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             .addOnSuccessListener {
 //                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
+                Toast.makeText(this, "Success - Request Updates", Toast.LENGTH_LONG).show()
+
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
+                Toast.makeText(this, "Failure - Request Updates", Toast.LENGTH_LONG).show()
             }
     }
 
-    private fun removeUpdates(){
+    private fun removeUpdates() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACTIVITY_RECOGNITION
@@ -112,14 +127,14 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             // for ActivityCompat#requestPermissions for more details.
             return
         }
-        client
-            .removeActivityUpdates(getPendingIntent()) // the same pending intent
+        client.removeActivityUpdates(getPendingIntent()) // the same pending intent
     }
 
     /* Create a pending intent b/c the */
 
     private fun getPendingIntent() : PendingIntent{
         val intent = Intent(this, ActivityTransitionReceiver::class.java)
+        intent.action = "action.TRANSITIONS_DATA"
         Log.d("TAG", "PendingIntent is being called...")
         Log.d("TAG", "intent content...${intent.toString()}")
 
@@ -178,4 +193,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             android.Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
+
+    // to handle result sent back from ActivityTransitionReceiver
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//    }
 }

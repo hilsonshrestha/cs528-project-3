@@ -22,7 +22,6 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
                     Log.d("TAG", event.toString())
                     val info =
                         "Transition: ${ActivityTransitionUtil.toActivityString(event.activityType)} - ${ActivityTransitionUtil.toTransitionType(event.transitionType)}"
-
                     Log.d("TAG", info)
                     Toast.makeText(context, info, Toast.LENGTH_LONG).show()
 
@@ -30,6 +29,9 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
                     if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
                         ActivityState.updateState(event.activityType)
                     }
+                    // creating a new intent to pass the result data back to the calling component (i.e. MainActivity)
+                    val resultIntent = Intent()
+                    resultIntent.putExtra("result_key", info)
                 }
             }
         }
