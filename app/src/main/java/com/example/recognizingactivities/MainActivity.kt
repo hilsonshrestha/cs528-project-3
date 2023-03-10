@@ -41,15 +41,14 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 ) {
                     /* Change the switch back to false because the permission is not yet done*/
                     binding.switchActivityTransition.isChecked = false
-                    Log.d("TAG", "Executing request permission...")
+                    Log.d("TAG", "Requesting permission for Activity Recognition...")
                     requestActivityTransitionPermission()
                 } else {
-                    Log.d("TAG", "Already has permission...")
-                    requestForUpdates()
+                    Toast.makeText(this, "Permission for Activity Recognition found. Start detecting now...", Toast.LENGTH_LONG).show()
+                    requestForActivityUpdates()
                 }
             } else {
-                Log.d("TAG", "No permissions found...")
-                removeUpdates()
+                deregisterForActivityUpdates()
             }
         }
 
@@ -77,7 +76,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         })
     }
 
-    private fun requestForUpdates(){
+    private fun requestForActivityUpdates(){
         client
             .requestActivityTransitionUpdates(
                 ActivityTransitionUtil.getActivityTransitionRequest(),
@@ -93,9 +92,16 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
     }
 
-    private fun removeUpdates(){
+    private fun deregisterForActivityUpdates(){
         client
             .removeActivityUpdates(getPendingIntent()) // the same pending intent
+            .addOnSuccessListener {
+                getPendingIntent().cancel()
+                Toast.makeText(this, "Successful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener{
+                Toast.makeText(this, "Unsuccessful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+            }
     }
 
     /* Create a pending intent b/c the */
@@ -104,12 +110,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         val intent = Intent(this, ActivityTransitionReceiver::class.java)
         intent.action = "action.TRANSITIONS_DATA"
         Log.d("TAG", "PendingIntent is being called...")
-        Log.d("TAG", "intent content...${intent.toString()}")
+        Log.d("TAG", "intent content...${intent}")
         return PendingIntent.getBroadcast(
             this,
             Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
@@ -117,7 +123,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         /* switch the checkbox back */
         binding.switchActivityTransition.isChecked = true
-        requestForUpdates()
+        requestForActivityUpdates()
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -152,6 +158,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         super.onDestroy()
         mediaPlayerUtil.closeMediaPlayer()
         // remove activity transition update
-        removeUpdates()
+        deregisterForActivityUpdates()
     }
 }
