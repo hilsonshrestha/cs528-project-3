@@ -1,7 +1,6 @@
 package com.example.recognizingactivities
 
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -9,30 +8,23 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
+import com.example.recognizingactivities.util.ActivityState
 import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
-import com.example.recognizingactivities.util.MyActivityResultContract
+import com.example.recognizingactivities.util.MyMediaPlayerUtil
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
-
-    // this contract is used to process data passed back from ActivityTransitionReceiver
-    private val myActivityResultContract = MyActivityResultContract()
-    val launcher = registerForActivityResult(myActivityResultContract) { result ->
-        // Do something with the resulting data
-        if (result != null) {
-            return@registerForActivityResult
-            }
-        }
+    private lateinit var mediaPlayerUtil: MyMediaPlayerUtil
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +33,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         setContentView(binding.root)
 
         client = ActivityRecognition.getClient(this)
-
 
         binding.switchActivityTransition.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -62,6 +53,28 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
         }
 
+        // for MP3 audio
+        mediaPlayerUtil = MyMediaPlayerUtil(this, R.raw.beat)
+
+
+        // update UI on transition
+        ActivityState.getState().observe(this, Observer { activity ->
+            val (img, text) = when(activity) {
+                DetectedActivity.STILL -> R.drawable.still to R.string.still
+                DetectedActivity.WALKING -> R.drawable.walking to R.string.walking
+                DetectedActivity.RUNNING -> R.drawable.running to R.string.running
+                else -> R.drawable.in_vehicle to R.string.in_vehicle
+            }
+            binding.activityImage.setImageResource(img)
+            binding.activityText.setText(text)
+
+            // Updating MP3 audio
+            when(activity) {
+                DetectedActivity.WALKING -> mediaPlayerUtil.start()
+                DetectedActivity.RUNNING -> mediaPlayerUtil.start()
+                else -> mediaPlayerUtil.stop()
+            }
+        })
     }
 
     private fun requestForUpdates(){
@@ -71,10 +84,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 getPendingIntent()
             )
             .addOnSuccessListener {
-                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
-                Toast.makeText(this, "Success - Request Updates", Toast.LENGTH_LONG).show()
-
+                ActivityState.startActivityTimer()
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
@@ -137,9 +148,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         )
     }
 
-    // to handle result sent back from ActivityTransitionReceiver
-
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//    }
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayerUtil.closeMediaPlayer()
+        // remove activity transition update
+        removeUpdates()
+    }
 }

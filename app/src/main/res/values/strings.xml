@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Recognizing Activities</string>
+    <string name="still">You are Still</string>
+    <string name="walking">You are Walking</string>
+    <string name="running">You are Running</string>
+    <string name="in_vehicle">You are in Vehicle</string>
 </resources>
