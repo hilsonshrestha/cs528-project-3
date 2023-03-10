@@ -18,21 +18,28 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
             val result = ActivityTransitionResult.extractResult(intent)
             Log.d("TAG", "extracted intent from the receiver...${result.toString()}")
             result?.let{
-                result.transitionEvents.forEach { event ->
-                    Log.d("TAG", event.toString())
-                    val info =
-                        "Transition: ${ActivityTransitionUtil.toActivityString(event.activityType)} - ${ActivityTransitionUtil.toTransitionType(event.transitionType)}"
-                    Log.d("TAG", info)
-                    Toast.makeText(context, info, Toast.LENGTH_LONG).show()
+                    result.transitionEvents.forEach { event ->
+                        Log.d("TAG", event.toString())
 
-                    // Update UI
-                    if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
-                        ActivityState.updateState(event.activityType)
+                        val activityType = ActivityTransitionUtil.toActivityString(event.activityType)
+                        val transitionType = ActivityTransitionUtil.toTransitionType(event.transitionType)
+                        Log.d("TAG", "Transition: $activityType - $transitionType")
+
+                        // Display toast with old activity
+                        if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_EXIT){
+                            val duration = (System.currentTimeMillis() - ActivityState.getStartTime()) / 1000
+                            val durationMin = duration / 60
+                            val durationSec = duration % 60
+                            val info = "You were $activityType for ${durationMin}m, ${durationSec}s"
+                            Toast.makeText(context, info, Toast.LENGTH_LONG).show()
+                        }
+                        // Update UI with new activity
+                        else if(event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER){
+                            ActivityState.startActivityTimer()
+                            ActivityState.updateState(event.activityType)
+                        }
                     }
-                    // creating a new intent to pass the result data back to the calling component (i.e. MainActivity)
-                    val resultIntent = Intent()
-                    resultIntent.putExtra("result_key", info)
-                }
+
             }
         }
     }

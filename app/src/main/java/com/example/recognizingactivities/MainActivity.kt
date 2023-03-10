@@ -2,7 +2,6 @@ package com.example.recognizingactivities
 
 import android.Manifest
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -20,26 +19,17 @@ import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
 import com.example.recognizingactivities.util.Constants.LOCATION_REQUEST_CODE
-import com.example.recognizingactivities.util.MyActivityResultContract
+import com.example.recognizingactivities.util.MyMediaPlayerUtil
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
 
-    // this contract is used to process data passed back from ActivityTransitionReceiver
-    private val myActivityResultContract = MyActivityResultContract()
-    @RequiresApi(Build.VERSION_CODES.Q)
-    val launcher = registerForActivityResult(myActivityResultContract) { result ->
-        // Do something with the resulting data
-        if (result != null) {
-            return@registerForActivityResult
-            }
-        }
+    private lateinit var mediaPlayerUtil: MyMediaPlayerUtil
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,17 +45,20 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 ) {
                     /* Change the switch back to false because the permission is not yet done*/
                     binding.switchActivityTransition.isChecked = false
-                    Log.d("TAG", "Executing request permission...")
+                    Log.d("TAG", "Requesting permission for Activity Recognition...")
                     requestActivityTransitionPermission()
                 } else {
-                    Log.d("TAG", "Already has permission...")
-                    requestForUpdates()
+                    Toast.makeText(this, "Permission for Activity Recognition found. Start detecting now...", Toast.LENGTH_LONG).show()
+                    requestForActivityUpdates()
                 }
             } else {
-                Log.d("TAG", "No permissions found...")
-                removeUpdates()
+                deregisterForActivityUpdates()
             }
         }
+
+        // for MP3 audio
+        mediaPlayerUtil = MyMediaPlayerUtil(this, R.raw.beat)
+
 
         // update UI on transition
         ActivityState.getState().observe(this, Observer { activity ->
@@ -77,10 +70,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
             binding.activityImage.setImageResource(img)
             binding.activityText.setText(text)
+
+            // Updating MP3 audio
+            when(activity) {
+                DetectedActivity.WALKING -> mediaPlayerUtil.start()
+                DetectedActivity.RUNNING -> mediaPlayerUtil.start()
+                else -> mediaPlayerUtil.stop()
+            }
         })
     }
 
-    private fun requestForUpdates(){
+    private fun requestForActivityUpdates(){
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACTIVITY_RECOGNITION
@@ -101,10 +101,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 getPendingIntent()
             )
             .addOnSuccessListener {
-//                Log.d("TAG", "PendingIntent content ${getPendingIntent().toString()}")
                 Log.d("TAG", "Success - Request Updates")
-                Toast.makeText(this, "Success - Request Updates", Toast.LENGTH_LONG).show()
-
+                ActivityState.startActivityTimer()
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
@@ -112,7 +110,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
     }
 
-    private fun removeUpdates() {
+    private fun deregisterForActivityUpdates(){
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACTIVITY_RECOGNITION
@@ -127,7 +125,15 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             // for ActivityCompat#requestPermissions for more details.
             return
         }
-        client.removeActivityUpdates(getPendingIntent()) // the same pending intent
+        client
+            .removeActivityUpdates(getPendingIntent()) // the same pending intent
+            .addOnSuccessListener {
+                getPendingIntent().cancel()
+                Toast.makeText(this, "Successful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener{
+                Toast.makeText(this, "Unsuccessful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+            }
     }
 
     /* Create a pending intent b/c the */
@@ -138,22 +144,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         Log.d("TAG", "PendingIntent is being called...")
         Log.d("TAG", "intent content...${intent.toString()}")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return PendingIntent.getBroadcast(
-                this,
-                Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        } else {
-            return PendingIntent.getBroadcast(
-                this,
-                Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
-
+        return PendingIntent.getBroadcast(
+            this,
+            Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
     }
 
@@ -161,7 +157,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         /* switch the checkbox back */
         binding.switchActivityTransition.isChecked = true
-        requestForUpdates()
+        requestForActivityUpdates()
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -194,9 +190,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         )
     }
 
-    // to handle result sent back from ActivityTransitionReceiver
-
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//    }
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayerUtil.closeMediaPlayer()
+        // remove activity transition update
+        deregisterForActivityUpdates()
+    }
 }
