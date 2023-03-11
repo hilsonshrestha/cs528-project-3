@@ -15,29 +15,28 @@ import java.lang.Math.sqrt
 
 class StepCounterUtil(private val context: Context) {
 
-    private val SMOOTHING_WINDOW_SIZE = 20;
-    private val mRawAccelValues = FloatArray(3)
+    private val smoothingWindowSize = 20;
+    private val rawAccValues = FloatArray(3)
 
     private var mGraph1LastXValue = 0.0
     private var mGraph2LastXValue = 0.0
 
-    private val mAccelValueHistory = Array(3) {
+    private val accValueHistory = Array(3) {
         FloatArray(
-            SMOOTHING_WINDOW_SIZE
+            smoothingWindowSize
         )
     }
-    private val mRunningAccelTotal = FloatArray(3)
-    private val mCurAccelAvg = FloatArray(3)
-    private var mCurReadIndex = 0
+    private val runningAccTotal = FloatArray(3)
+    private val currentAccAvg = FloatArray(3)
+    private var currentReadIndex = 0
 
-    private var mStepCounter = 0f
+    private var stepCounter = 0f
 
-    private var mSeries1: LineGraphSeries<DataPoint>? = null
-    private var mSeries2: LineGraphSeries<DataPoint>? = null
+    private var seriesOne: LineGraphSeries<DataPoint>? = null
+    private var seriesTwo: LineGraphSeries<DataPoint>? = null
 
-    //private val lastMag = 0.0
-    private var avgMag = 0.0
-    private var netMag = 0.0
+    private var avgMagnitude = 0.0
+    private var netMagnitude = 0.0
 
     private var lastXPoint = 1.0
     var stepThreshold = 1.0
@@ -46,94 +45,51 @@ class StepCounterUtil(private val context: Context) {
 
     init{
 
-        Log.i("Step", "Step counter started")
-        //sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager;
-        //val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
-
-        mSeries1 = LineGraphSeries()
-        mSeries2 = LineGraphSeries()
-
-        //val graph : GraphView? = null;
-        //mSeries1 = LineGraphSeries()
-        /*if (graph != null) {
-            graph.addSeries(mSeries1)
-        }
-        //graph.title = "Accelerator Signal"
-        //graph.gridLabelRenderer.verticalAxisTitle = "Signal Value"
-        //graph.viewport.isXAxisBoundsManual = true
-        if (graph != null) {
-            graph.viewport.setMinX(0.0)
-        }
-        if (graph != null) {
-            graph.viewport.setMaxX(60.0)
-        }*/
-
-        //val graph2 : GraphView? = null;
-        //mSeries2 = LineGraphSeries()
-        //graph2.title = "Smoothed Signal"
-        /*if (graph2 != null) {
-            graph2.addSeries(mSeries2)
-        }
-        //graph2.gridLabelRenderer.verticalAxisTitle = "Signal Value"
-        //graph2.viewport.isXAxisBoundsManual = true
-        if (graph2 != null) {
-            graph2.viewport.setMinX(0.0)
-        }
-        if (graph2 != null) {
-            graph2.viewport.setMaxX(60.0)
-        }*/
+        seriesOne = LineGraphSeries()
+        seriesTwo = LineGraphSeries()
     }
 
     fun detectSteps(event: SensorEvent?): Int {
         if (event != null) {
-            mRawAccelValues[0] = event.values[0];
-            mRawAccelValues[1] = event.values[1];
-            mRawAccelValues[2] = event.values[2];
-
-            /*Log.i("mRawAccelValues[0]: ", mRawAccelValues[0].toString());
-            Log.i("mRawAccelValues[1]: ", mRawAccelValues[1].toString());
-            Log.i("mRawAccelValues[2]: ", mRawAccelValues[2].toString());
-*/
+            rawAccValues[0] = event.values[0];
+            rawAccValues[1] = event.values[1];
+            rawAccValues[2] = event.values[2];
             var lastMag : Double =
-                Math.sqrt(((mRawAccelValues[0] * mRawAccelValues[0] + mRawAccelValues[1] * mRawAccelValues[1] + mRawAccelValues[2] * mRawAccelValues[2]).toDouble()))
-            //Log.i("lastMag", lastMag.toString());
+                kotlin.math.sqrt(((rawAccValues[0] * rawAccValues[0] + rawAccValues[1] * rawAccValues[1] + rawAccValues[2] * rawAccValues[2]).toDouble()))
 
             for (i in 0..2) {
-                mRunningAccelTotal[i] = mRunningAccelTotal[i] - mAccelValueHistory[i][mCurReadIndex]
-                mAccelValueHistory[i][mCurReadIndex] = mRawAccelValues[i]
-                mRunningAccelTotal[i] = mRunningAccelTotal[i] + mAccelValueHistory[i][mCurReadIndex]
-                mCurAccelAvg[i] = mRunningAccelTotal[i] / SMOOTHING_WINDOW_SIZE
+                runningAccTotal[i] = runningAccTotal[i] - accValueHistory[i][currentReadIndex]
+                accValueHistory[i][currentReadIndex] = rawAccValues[i]
+                runningAccTotal[i] = runningAccTotal[i] + accValueHistory[i][currentReadIndex]
+                currentAccAvg[i] = runningAccTotal[i] / smoothingWindowSize
             }
 
-            mCurReadIndex++;
-            if(mCurReadIndex >= SMOOTHING_WINDOW_SIZE){
-                mCurReadIndex = 0;
+            currentReadIndex++;
+            if(currentReadIndex >= smoothingWindowSize){
+                currentReadIndex = 0;
             }
 
-            avgMag =
-                Math.sqrt((mCurAccelAvg[0] * mCurAccelAvg[0] + mCurAccelAvg[0] * mCurAccelAvg[0] + mCurAccelAvg[0] * mCurAccelAvg[0]).toDouble());
+            avgMagnitude =
+                kotlin.math.sqrt((currentAccAvg[0] * currentAccAvg[0] + currentAccAvg[0] * currentAccAvg[0] + currentAccAvg[0] * currentAccAvg[0]).toDouble());
 
-            netMag = lastMag - avgMag;
+            netMagnitude = lastMag - avgMagnitude;
 
             mGraph1LastXValue += 1.0
-            mSeries1?.appendData(DataPoint(mGraph1LastXValue, lastMag), true, 60)
+            seriesOne?.appendData(DataPoint(mGraph1LastXValue, lastMag), true, 60)
 
             mGraph2LastXValue += 1.0
-            mSeries2?.appendData(DataPoint(mGraph2LastXValue, netMag), true, 60)
+            seriesTwo?.appendData(DataPoint(mGraph2LastXValue, netMagnitude), true, 60)
 
         }
 
         peakDetection();
 
-        //return mStepCounter.toInt();
-        Log.i("mStepCounter", mStepCounter.toString())
-
-        return mStepCounter.toInt();
+        return stepCounter.toInt();
 
     }
 
     private fun peakDetection(){
-        val highestValX = mSeries2?.highestValueX;
+        val highestValX = seriesTwo?.highestValueX;
 
         if (highestValX != null) {
             if(highestValX - lastXPoint < windowSize){
@@ -142,7 +98,7 @@ class StepCounterUtil(private val context: Context) {
         }
 
         val valuesInWindow = highestValX?.let {
-            mSeries2!!.getValues(
+            seriesTwo!!.getValues(
                 lastXPoint,
                 it
             )
@@ -165,10 +121,9 @@ class StepCounterUtil(private val context: Context) {
         for (i in dataPointList.indices) {
             if (i == 0) continue else if (i < dataPointList.size - 1) {
                 forwardSlope = dataPointList[i + 1].y - dataPointList[i].y
-                //Log.i("dataPointList[i].y < noiseThreshold", (dataPointList[i].y < noiseThreshold).toString())
                 downwardSlope = dataPointList[i].y - dataPointList[i - 1].y
                 if (forwardSlope < 0 && downwardSlope > 0 && dataPointList[i].y > stepThreshold && dataPointList[i].y < noiseThreshold) {
-                    mStepCounter += 1
+                    stepCounter += 1
                 }
             }
         }

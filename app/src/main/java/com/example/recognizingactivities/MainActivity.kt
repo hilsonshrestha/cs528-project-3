@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager;
         stepsCounterUtil = StepCounterUtil(this)
-        //val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
     private fun requestForActivityUpdates(){
@@ -230,7 +229,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
 
     override fun onSensorChanged(event: SensorEvent?) {
         val steps = stepsCounterUtil.detectSteps(event);
-        Log.i("Steps", steps.toString())
         binding.steps.text = "Steps taken since app started: $steps";
     }
 
