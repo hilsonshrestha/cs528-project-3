@@ -35,9 +35,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Address: [XYZ]"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:id="@+id/currentAddress"
+        android:text="Address: waiting for location..."
+        android:textSize="16sp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:textStyle="normal"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"/>
 
