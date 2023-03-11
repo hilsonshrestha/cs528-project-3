@@ -2,8 +2,13 @@ package com.example.recognizingactivities
 
 import android.Manifest
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -15,21 +20,21 @@ import androidx.lifecycle.Observer
 import androidx.appcompat.app.AppCompatActivity
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
-import com.example.recognizingactivities.util.ActivityState
-import com.example.recognizingactivities.util.ActivityTransitionUtil
-import com.example.recognizingactivities.util.Constants
+import com.example.recognizingactivities.util.*
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
-import com.example.recognizingactivities.util.MyMediaPlayerUtil
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 
-class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, SensorEventListener {
 
     private lateinit var client: ActivityRecognitionClient
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var mediaPlayerUtil: MyMediaPlayerUtil
+
+    private lateinit var stepsCounterUtil: StepCounterUtil;
+    private lateinit var sensorManager : SensorManager;
 
     private val locationViewModel: LocationViewModel by viewModels()
 
@@ -85,6 +90,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
                 else -> mediaPlayerUtil.stop()
             }
         })
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager;
+        stepsCounterUtil = StepCounterUtil(this)
+        //val sensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
     private fun requestForActivityUpdates(){
@@ -197,10 +206,35 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         )
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        when{
+            accelerometer != null -> {
+                sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+            }
+            else -> {
+                Toast.makeText(this, "Your device is not compatible", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayerUtil.closeMediaPlayer()
         // remove activity transition update
         deregisterForActivityUpdates()
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        val steps = stepsCounterUtil.detectSteps(event);
+        Log.i("Steps", steps.toString())
+        binding.steps.text = "Steps taken since app started: $steps";
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+        //
     }
 }
