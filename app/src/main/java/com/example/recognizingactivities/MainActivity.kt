@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
@@ -18,7 +19,6 @@ import com.example.recognizingactivities.util.ActivityState
 import com.example.recognizingactivities.util.ActivityTransitionUtil
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
-import com.example.recognizingactivities.util.Constants.LOCATION_REQUEST_CODE
 import com.example.recognizingactivities.util.MyMediaPlayerUtil
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
@@ -31,10 +31,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private lateinit var mediaPlayerUtil: MyMediaPlayerUtil
 
+    private val locationViewModel: LocationViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        locationViewModel.selectedItem.observe(this, Observer { location ->
+            Log.i("MAINACTIVITY", "location was updated...")
+            binding.currentAddress.text = "Address: ${location.address}"
+        })
 
         client = ActivityRecognition.getClient(this)
 

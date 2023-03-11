@@ -1,6 +1,9 @@
 package com.example.recognizingactivities
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.location.Geocoder
 import android.location.Location
 import androidx.fragment.app.Fragment
 
@@ -10,13 +13,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
 import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import java.util.*
 
 class MapsFragment : Fragment() {
 
@@ -28,6 +36,13 @@ class MapsFragment : Fragment() {
 
     private var currentLocation: Location? = null
 
+    private lateinit var googleMap: GoogleMap
+    private var marker: Marker? = null
+
+    private val locationViewModel: LocationViewModel by activityViewModels()
+
+    private var currentLocationModel: LocationModel? = null
+
     private val callback = OnMapReadyCallback { googleMap ->
         /**
          * Manipulates the map once available.
@@ -38,9 +53,8 @@ class MapsFragment : Fragment() {
          * install it inside the SupportMapFragment. This method will only be triggered once the
          * user has installed Google Play services and returned to the app.
          */
-        val sydney = LatLng(-34.0, 151.0)
-        googleMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        this.googleMap = googleMap
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(18.0f))
     }
 
     override fun onCreateView(
@@ -74,6 +88,32 @@ class MapsFragment : Fragment() {
                 // if a Notification is created (when the user navigates away from app).
                 currentLocation = locationResult.lastLocation
                 Log.i("LOCATION", "location received $currentLocation.latitude")
+
+                if (currentLocation != null) {
+                    val currentLocation = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
+                    if (marker == null) {
+
+                        val smallMarker = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(resources, R.drawable.marker), 64, 64, false)
+                        val m = googleMap.addMarker(
+                            MarkerOptions().position(currentLocation).title("Location").icon(
+                                BitmapDescriptorFactory.fromBitmap(smallMarker))
+                        )
+                        marker = m
+
+                        currentLocationModel = LocationModel(currentLocation, "")
+                    }
+                    marker!!.position = currentLocation
+
+                    val geoCoder = context?.let { Geocoder(it, Locale("en", "us")) }
+                    val addresses = geoCoder?.getFromLocation(currentLocation.latitude, currentLocation.longitude, 1)
+                    if (addresses != null && addresses.size == 1) {
+                        Log.i("LOCATION", addresses[0].getAddressLine(0))
+                        currentLocationModel?.address = addresses[0].getAddressLine(0)
+                    }
+                    locationViewModel.selectItem(currentLocationModel!!)
+
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLng(currentLocation))
+                }
 
             }
         }
