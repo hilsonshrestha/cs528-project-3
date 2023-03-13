@@ -14,6 +14,7 @@ This project demonstrates usage of Android Sensor programming (for step counting
 2. https://github.com/googlesamples/easypermissions
 3. https://www.sitepoint.com/a-step-by-step-guide-to-building-an-android-audio-player-app/?fbclid=IwAR3Zg9FUGT88eQP874p2xJzOmlNA4STa7crYW4LvoXTjQ8-2DhyGIbPyz8Q
 4. https://github.com/jonfroehlich/CSE590Sp2018/tree/master/Assignments/A01-StepTracker
+5. https://developer.android.com/codelabs/activity-recognition-transition#0
 
 
 ## Special instructions to run our submission: 
@@ -34,3 +35,4 @@ However, it is tricky to trigger a `RUNNING` detection by just running. Therefor
 ## Computer tested on:
 1. Asus ZenBook AMD Ryzen 7 5700U with Radeon Graphics, CPU 1.80 GHz, 8GB RAM
 2. Lenovo Legion 5 Pro AMD Ryzen 5800 with Radeon Graphics, CPU 3.20 GHz, 16GB RAM
+3. Lenovo Thinkpad X1 Carbon 5th Gen, CPU 2.6 GHz, 16GB RAM
