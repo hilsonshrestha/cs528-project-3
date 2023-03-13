@@ -15,8 +15,7 @@ class MyMediaPlayerUtil (private val context: Context, private val audioResource
             Log.d("TAG", "a mediaPlayer is initialized")
         }
         mediaPlayer.start()
-
-        Toast.makeText(context, "Media playing", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Media playing", Toast.LENGTH_SHORT).show()
         /*
          when the mediaPlayer completed the media content (end of audio)
          set the complete listener to restart the audio when it's finished playing
@@ -24,7 +23,6 @@ class MyMediaPlayerUtil (private val context: Context, private val audioResource
         mediaPlayer.setOnCompletionListener {
             mediaPlayer.seekTo(0) // set the playback position to the beginning of audio
             mediaPlayer.start() // Start the playback position to the beginning
-            Toast.makeText(context, "end of audio. restarting...", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -36,7 +34,6 @@ class MyMediaPlayerUtil (private val context: Context, private val audioResource
             mediaPlayer.setOnCompletionListener (null) // Remove the onCompletionListener to avoid restarting the audio
             mediaPlayer.release()
             mediaPlayer = MediaPlayer.create(context, audioResourceId) // initialize the mediaPlayer again
-            Toast.makeText(context, "media stop", Toast.LENGTH_SHORT).show()
         }
     }
 

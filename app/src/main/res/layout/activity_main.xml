@@ -59,7 +59,6 @@
         android:layout_marginTop="10dp"
         android:layout_gravity="center_horizontal"/>
 
-<!--    TODO: To replace this with a Toast-->
     <TextView
         android:id="@+id/activityText"
         android:layout_height="wrap_content"
@@ -69,15 +68,5 @@
         android:textStyle="bold"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="10dp"/>
-
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/switchActivityTransition"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Activity Transition"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"
-        android:textSize="20sp"
-        />
 
 </LinearLayout>

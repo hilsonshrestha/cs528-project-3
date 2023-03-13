@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
 
     private lateinit var mediaPlayerUtil: MyMediaPlayerUtil
 
-    private lateinit var stepsCounterUtil: StepCounterUtil;
-    private lateinit var sensorManager : SensorManager;
+    private lateinit var stepsCounterUtil: StepCounterUtil
+    private lateinit var sensorManager : SensorManager
 
     private val locationViewModel: LocationViewModel by viewModels()
 
@@ -50,22 +50,15 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
 
         client = ActivityRecognition.getClient(this)
 
-        binding.switchActivityTransition.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                    && !ActivityTransitionUtil.hasActivityTransitionPermission(this)
-                ) {
-                    /* Change the switch back to false because the permission is not yet done*/
-                    binding.switchActivityTransition.isChecked = false
-                    Log.d("TAG", "Requesting permission for Activity Recognition...")
-                    requestActivityTransitionPermission()
-                } else {
-                    Toast.makeText(this, "Permission for Activity Recognition found. Start detecting now...", Toast.LENGTH_LONG).show()
-                    requestForActivityUpdates()
-                }
-            } else {
-                deregisterForActivityUpdates()
-            }
+        // Run activity recognition once the app starts
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+            && !ActivityTransitionUtil.hasActivityTransitionPermission(this)
+        ) {
+            Toast.makeText(this, "No permission found. Requesting permission for Activity Recognition now...", Toast.LENGTH_SHORT).show()
+            requestActivityTransitionPermission()
+        } else {
+            Toast.makeText(this, "Permission for Activity Recognition found. Start detecting now...", Toast.LENGTH_SHORT).show()
+            requestForActivityUpdates()
         }
 
         // for MP3 audio
@@ -91,7 +84,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             }
         })
 
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager;
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepsCounterUtil = StepCounterUtil(this)
     }
 
@@ -121,7 +114,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             }
             .addOnFailureListener {
                 Log.d("TAG", "Failure - Request Updates")
-                Toast.makeText(this, "Failure - Request Updates", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Failure - Request Updates", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -144,10 +137,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             .removeActivityUpdates(getPendingIntent()) // the same pending intent
             .addOnSuccessListener {
                 getPendingIntent().cancel()
-                Toast.makeText(this, "Successful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Successful deregistration of activity recognition", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener{
-                Toast.makeText(this, "Unsuccessful deregistration of activity recognition", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Unsuccessful deregistration of activity recognition", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -156,22 +149,18 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
     private fun getPendingIntent() : PendingIntent{
         val intent = Intent(this, ActivityTransitionReceiver::class.java)
         intent.action = "action.TRANSITIONS_DATA"
-        Log.d("TAG", "PendingIntent is being called...")
-        Log.d("TAG", "intent content...${intent.toString()}")
 
         return PendingIntent.getBroadcast(
             this,
             Constants.ACTIVITY_TRANSITION_REQUEST_CODE_RECEIVER,
             intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
     }
 
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
-        /* switch the checkbox back */
-        binding.switchActivityTransition.isChecked = true
         requestForActivityUpdates()
     }
 
@@ -199,23 +188,23 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             this,
             "You need to allow activity transition permissions in order to use this feature.",
             ACTIVITY_TRANSITION_REQUEST_CODE,
-            android.Manifest.permission.ACTIVITY_RECOGNITION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACTIVITY_RECOGNITION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
 
     override fun onResume() {
         super.onResume()
 
-        val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         when{
             accelerometer != null -> {
                 sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
             }
             else -> {
-                Toast.makeText(this, "Your device is not compatible", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Your device is not compatible", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -228,8 +217,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        val steps = stepsCounterUtil.detectSteps(event);
-        binding.steps.text = "Steps taken since app started: $steps";
+        val steps = stepsCounterUtil.detectSteps(event)
+        binding.steps.text = "Steps taken since app started: $steps"
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {

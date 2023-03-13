@@ -12,14 +12,10 @@ import com.google.android.gms.location.ActivityTransitionResult
 
 class ActivityTransitionReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("TAG", "This is printed since BroadcastReceiver got triggered")
         if (ActivityTransitionResult.hasResult(intent)){
-            Log.d("TAG", "This is printed since got an intent")
             val result = ActivityTransitionResult.extractResult(intent)
-            Log.d("TAG", "extracted intent from the receiver...${result.toString()}")
             result?.let{
                     result.transitionEvents.forEach { event ->
-                        Log.d("TAG", event.toString())
 
                         val activityType = ActivityTransitionUtil.toActivityString(event.activityType)
                         val transitionType = ActivityTransitionUtil.toTransitionType(event.transitionType)
@@ -39,7 +35,6 @@ class ActivityTransitionReceiver: BroadcastReceiver() {
                             ActivityState.updateState(event.activityType)
                         }
                     }
-
             }
         }
     }
