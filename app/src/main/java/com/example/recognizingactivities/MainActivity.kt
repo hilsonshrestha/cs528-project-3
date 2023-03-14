@@ -1,6 +1,7 @@
 package com.example.recognizingactivities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -20,11 +21,13 @@ import androidx.lifecycle.Observer
 import androidx.appcompat.app.AppCompatActivity
 import com.example.recognizingactivities.databinding.ActivityMainBinding
 import com.example.recognizingactivities.receiver.ActivityTransitionReceiver
+import com.example.recognizingactivities.receiver.GeofenceBroadcastReceiver
 import com.example.recognizingactivities.util.*
 import com.example.recognizingactivities.util.Constants.ACTIVITY_TRANSITION_REQUEST_CODE
 import com.google.android.gms.location.*
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, SensorEventListener {
 
@@ -36,8 +39,11 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
     private lateinit var stepsCounterUtil: StepCounterUtil
     private lateinit var sensorManager : SensorManager
 
+    lateinit var geofencingClient: GeofencingClient
+
     private val locationViewModel: LocationViewModel by viewModels()
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -49,6 +55,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
         })
 
         client = ActivityRecognition.getClient(this)
+        geofencingClient = LocationServices.getGeofencingClient(this)
 
         // Run activity recognition once the app starts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -86,6 +93,120 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         stepsCounterUtil = StepCounterUtil(this)
+
+
+        // GeoFence
+        createGeoFenceList()
+
+        GeoFenceState.getLibraryState().observe(this, Observer { libraryVisits ->
+            binding.txtLibraryCount.text = "Visits to Library geoFence: $libraryVisits"
+        })
+
+        GeoFenceState.getFullerState().observe(this, Observer { fullerVisits ->
+            binding.txtFullerCount.text = "Visits to Fuller labs geoFence: $fullerVisits"
+        })
+
+    }
+
+
+    // A PendingIntent for the Broadcast Receiver that handles geofence transitions.
+    private val geofencePendingIntent: PendingIntent by lazy {
+        val intent = Intent(this, GeofenceBroadcastReceiver::class.java)
+        intent.action = "action.ACTION_GEOFENCE_EVENT"
+        PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+
+    private fun createGeoFenceList() {
+        val geoFences = mutableListOf<Geofence>()
+        geoFences.add(Geofence.Builder()
+            // Set the request ID of the geofence. This is a string to identify this
+            // geofence.
+            .setRequestId(Constants.LOCATION_FULLER)
+
+            // Set the circular region of this geofence.
+            .setCircularRegion(
+                42.2749, -71.8066,
+                20.0F
+            )
+
+            // Set the expiration duration of the geofence. This geofence gets automatically
+            // removed after this period of time.
+            .setExpirationDuration(TimeUnit.HOURS.toMillis(1))
+
+            // Set the transition types of interest. Alerts are only generated for these
+            // transition. We track entry and exit transitions in this sample.
+            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT or Geofence.GEOFENCE_TRANSITION_DWELL)
+            .setLoiteringDelay(10000)
+
+            // Create the geofence.
+            .build()
+        )
+
+        geoFences.add(Geofence.Builder()
+            // Set the request ID of the geofence. This is a string to identify this
+            // geofence.
+            .setRequestId(Constants.LOCATION_LIBRARY)
+
+            // Set the circular region of this geofence.
+            .setCircularRegion(
+                42.2742, -71.8066,
+                20.0F
+            )
+
+            // Set the expiration duration of the geofence. This geofence gets automatically
+            // removed after this period of time.
+            .setExpirationDuration(TimeUnit.HOURS.toMillis(1))
+
+            // Set the transition types of interest. Alerts are only generated for these
+            // transition. We track entry and exit transitions in this sample.
+            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT or Geofence.GEOFENCE_TRANSITION_DWELL)
+            .setLoiteringDelay(10000)
+
+            // Create the geofence.
+            .build()
+        )
+
+        // Build the geofence request
+        val geofencingRequest = GeofencingRequest.Builder()
+            // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
+            // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
+            // is already inside that geofence.
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL)
+
+            // Add the geofences to be monitored by geofencing service.
+            .addGeofences(geoFences)
+            .build()
+
+        // First, remove any existing geofences that use our pending intent
+        geofencingClient.removeGeofences(geofencePendingIntent)?.run {
+            // Regardless of success/failure of the removal, add the new geofence
+            addOnCompleteListener {
+                // Add the new geofence request with the new geofence
+                if (ActivityCompat.checkSelfPermission(
+                        applicationContext,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return@addOnCompleteListener
+                }
+                geofencingClient.addGeofences(geofencingRequest, geofencePendingIntent)?.run {
+                    addOnSuccessListener {
+                        Log.i("GEOFENCE", "ADDED LISTENER")
+                    }
+                    addOnFailureListener {
+                        Log.e("GEOFENCE", "FAILURE LISTENER")
+                    }
+                }
+            }
+        }
     }
 
     private fun requestForActivityUpdates(){
@@ -188,9 +309,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             this,
             "You need to allow activity transition permissions in order to use this feature.",
             ACTIVITY_TRANSITION_REQUEST_CODE,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.ACTIVITY_RECOGNITION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION,
         )
     }
 
