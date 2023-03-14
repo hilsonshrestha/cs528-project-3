@@ -135,6 +135,7 @@ class MapsFragment : Fragment() {
             // TODO: Step 1.5, Subscribe to location changes.
             fusedLocationProviderClient.requestLocationUpdates(
                 locationRequest, locationCallback, Looper.getMainLooper())
+            Log.d("LOCATION", "Location Callback added.")
         } catch (unlikely: SecurityException) {
             Log.e("LOCATION", "Lost location permissions. Couldn't remove updates. $unlikely")
         }
