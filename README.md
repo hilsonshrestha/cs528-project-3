@@ -2,7 +2,7 @@
 This project demonstrates usage of Android Sensor programming (for step counting), Google Activity Recognition API, Geofences, Audio Player, and Google Android Maps.
 
 ## Members
-| Username| Lastname| Firstname|
+|Username|Lastname|Firstname|
 |-------------|-------------|-----------|
 |AmeyMore| Amey | More|
 |MinhHangwpi| Radetsky| Minh-Hang|
@@ -20,13 +20,12 @@ This project demonstrates usage of Android Sensor programming (for step counting
 
 
 ## Special instructions to run our submission: 
-1. Build the project from the `\src\` and `\hw3.apk` provided
-2. Run the app on your mobile device.
-3. When the app is launched, if permissions to use Activity Recognition and Location are not granted, the app will prompt the user to grant those access. When the access is successfully granted,
+1. Install the app on your mobile device using the `\hw3.apk` provided
+2. When the app is launched, if permissions to use Activity Recognition and Location are not granted, the app will prompt the user to grant those access. When the access is successfully granted,
 the app will start detecting user's location and activities.
 
 *Note: `STILL`, `WALKING`, `IN-VEHICLE` activities can be detected albeit in a slightly delayed manner by simply sitting still, walking, and in-vehicle, respectively.
-However, it is tricky to trigger a `RUNNING` detection by just running. Therefore, you can simulate that by moving the phone quickly as if you are drawing the infinity symbol in the air*
+However, it is tricky to trigger a `RUNNING` detection by just running. Therefore, you can simulate that by moving the phone quickly as if you are drawing a lot of infinity symbols in the air*
 
 *Note: Total number of steps get updated after some time.*
 
