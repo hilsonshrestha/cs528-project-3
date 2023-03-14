@@ -53,6 +53,7 @@
                 <action android:name="action.TRANSITIONS_DATA"/>
             </intent-filter>
         </receiver>
+        <receiver android:name=".receiver.GeofenceBroadcastReceiver"/>
     </application>
 
 </manifest>

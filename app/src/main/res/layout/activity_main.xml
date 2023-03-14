@@ -8,46 +8,55 @@
     android:orientation="vertical">
 
     <TextView
+        android:id="@+id/txtFullerCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Visits to Fuller labs geoFences: [XYZ]"
-        android:textSize="20sp"
+        android:text="Visits to Fuller labs geoFence: 0"
+        android:textSize="16sp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"/>
+        android:layout_gravity="left"
+        android:layout_marginTop="16dp"/>
     <TextView
+        android:id="@+id/txtLibraryCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Visits to Library geoFences: [XYZ]"
-        android:textSize="20sp"
+        android:text="Visits to Library geoFence: 0"
+        android:textSize="16sp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        android:layout_gravity="left"
+        android:layout_marginTop="8dp"/>
     <TextView
         android:id="@+id/steps"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Steps taken since app started: 0"
-        android:textSize="20sp"
+        android:textSize="16sp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        android:layout_gravity="left"
+        android:layout_marginTop="8dp"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/currentAddress"
         android:text="Address: waiting for location..."
         android:textSize="16sp"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:textStyle="normal"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textStyle="bold"
+        android:layout_gravity="left"
+        android:layout_marginTop="8dp"/>
 
         <androidx.fragment.app.FragmentContainerView
             android:name="com.example.recognizingactivities.MapsFragment"
             android:layout_width="match_parent"
             android:id="@+id/mapContainer"
+            android:layout_marginTop="16dp"
             android:layout_height="200dp"/>
 
     <ImageView
