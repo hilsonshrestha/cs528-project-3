@@ -127,7 +127,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             // Set the circular region of this geofence.
             .setCircularRegion(
                 42.2749, -71.8066,
-                20.0F
+//                42.264177, -71.800864,
+                30.0F
             )
 
             // Set the expiration duration of the geofence. This geofence gets automatically
@@ -151,7 +152,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, S
             // Set the circular region of this geofence.
             .setCircularRegion(
                 42.2742, -71.8066,
-                20.0F
+//                42.263677, -71.802229,
+                30.0F
             )
 
             // Set the expiration duration of the geofence. This geofence gets automatically
