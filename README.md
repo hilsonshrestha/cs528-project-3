@@ -21,13 +21,12 @@ This project demonstrates usage of Android Sensor programming (for step counting
 
 ## Special instructions to run our submission: 
 1. Install the app on your mobile device using the `\hw3.apk` provided
-2. When the app is launched, if permissions to use Activity Recognition and Location are not granted, the app will prompt the user to grant those access. When the access is successfully granted,
-the app will start detecting user's location and activities.
+2. When the app is launched, if permissions to use Activity Recognition and Location are not granted, the app will prompt the user to grant those access. When the access is successfully granted, the app will start detecting user's location and activities. For Location permission in particular, be sure to set "allows access all the time" instead of "allows access only while in app" (as shown in the demo app).
 
 *Note: `STILL`, `WALKING`, `IN-VEHICLE` activities can be detected albeit in a slightly delayed manner by simply sitting still, walking, and in-vehicle, respectively.
-However, it is tricky to trigger a `RUNNING` detection by just running. Therefore, you can simulate that by moving the phone quickly as if you are drawing a lot of infinity symbols in the air*
+However, it is tricky to trigger a `RUNNING` detection by just running. Therefore, you can simulate that by moving the phone quickly as if you are drawing many infinity symbols in the air*
 
-*Note: Total number of steps get updated after some time.*
+*Note: The step count may take a moment to update, and the algorithm may not register light walking. To ensure accurate step counting, take larger strides or swing your arms more while walking*
 
 ## Phone tested on:
 1. OnePlus Nord N10 5G - android version 11
