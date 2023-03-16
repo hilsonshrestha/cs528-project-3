@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import com.example.recognizingactivities.util.Constants
 import com.example.recognizingactivities.util.GeoFenceState
 import com.google.android.gms.location.Geofence
@@ -39,8 +40,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             }
 
             if (fenceId == Constants.LOCATION_FULLER) {
+                Toast.makeText(context, "You have been inside the Fuller Labs geofence for 10 seconds, increment the counter", Toast.LENGTH_SHORT).show()
                 GeoFenceState.incrementFuller()
             } else if (fenceId == Constants.LOCATION_LIBRARY) {
+                Toast.makeText(context, "You have been inside the Library geofence for 10 seconds, increment the counter", Toast.LENGTH_SHORT).show()
                 GeoFenceState.incrementLibrary()
             }
 
